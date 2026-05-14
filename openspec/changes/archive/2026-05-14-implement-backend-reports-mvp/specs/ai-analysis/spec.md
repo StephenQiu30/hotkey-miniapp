@@ -1,7 +1,5 @@
-## Purpose
+## MODIFIED Requirements
 
-Define how AI analysis evaluates hotspot candidates and records explainable results.
-## Requirements
 ### Requirement: Candidate AI analysis
 
 The system SHALL classify analyzed candidates as `active` only when relevance meets the configured threshold and AI truthfulness is not explicitly false, while supporting threshold/realism filtering.
@@ -17,4 +15,3 @@ The system SHALL classify analyzed candidates as `active` only when relevance me
 - **WHEN** AI analysis relevance is at or above `RELEVANCE_THRESHOLD`
 - **AND** `is_real` is not false
 - **THEN** the result is classified as `active`
-

@@ -1,7 +1,5 @@
-## Purpose
+## MODIFIED Requirements
 
-Define how manual and scheduled hotspot checks share a single reliable workflow.
-## Requirements
 ### Requirement: Shared check-run pipeline
 
 The scheduler SHALL optionally generate daily and weekly reports using the same backend report service.
@@ -15,4 +13,3 @@ The scheduler SHALL optionally generate daily and weekly reports using the same 
 
 - **WHEN** weekly report scheduling is enabled and the configured weekday/hour has passed
 - **THEN** the scheduler generates and sends the previous complete ISO week report once
-

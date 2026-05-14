@@ -1,7 +1,5 @@
-## Purpose
+## MODIFIED Requirements
 
-Define how SMTP notification delivery behaves and how delivery status is recorded.
-## Requirements
 ### Requirement: SMTP notification records
 
 The system SHALL record SMTP delivery status for reports without blocking report generation.
@@ -17,4 +15,3 @@ The system SHALL record SMTP delivery status for reports without blocking report
 - **WHEN** SMTP sending fails
 - **THEN** a notification record is created with status `failed`
 - **AND** the error message is recorded
-
