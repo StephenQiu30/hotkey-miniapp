@@ -1,0 +1,16 @@
+{
+  "name": "hotkey-miniapp",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "openapi:generate": "openapi2ts",
+    "typecheck": "tsc --noEmit",
+    "test": "python3 -m unittest discover -s tests"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "@umijs/openapi": "^1.14.1",
+    "tslib": "^2.8.1",
+    "typescript": "^6.0.3"
+  }
+}

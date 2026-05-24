@@ -32,7 +32,7 @@ class MiniappOpenAPIContractTests(unittest.TestCase):
             "MiniappLoginRequest",
             "EmailLoginRequest",
             "HotspotRead",
-            "AIAnalysisRead",
+            "AiAnalysisRead",
             "quick_understanding",
             "topic_ideas",
             "rank_score",
