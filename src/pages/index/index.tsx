@@ -88,6 +88,24 @@ export default function IndexPage() {
   const [hotspots, setHotspots] = useState(initialHotspots);
   const [selectedHotspotId, setSelectedHotspotId] = useState(initialHotspots[0].id);
   const selected = useMemo(() => hotspots.find((item) => item.id === selectedHotspotId) ?? hotspots[0], [hotspots, selectedHotspotId]);
+  const notificationItems: HotKeyAPI.NotificationListResponse = {
+    limit: 2,
+    offset: 0,
+    items: [
+      {
+        id: 1,
+        hotspot_id: selected.id,
+        report_id: null,
+        channel: "in_app",
+        recipient: "miniapp",
+        status: "queued",
+        error_message: null,
+        sent_at: null,
+        created_at: "2026-05-24T10:20:00Z",
+        updated_at: "2026-05-24T10:20:00Z",
+      },
+    ],
+  };
 
   async function handlePlatformLogin() {
     const loginResult = await Taro.login();
@@ -104,6 +122,13 @@ export default function IndexPage() {
     setHotspots((items) => items.map((item) => (item.id === hotspotId ? { ...item, saved: !item.saved } : item)));
   }
 
+  async function handleSubscribeMessage() {
+    await Taro.requestSubscribeMessage({
+      entityIds: ["HOTKEY_TEMPLATE_ID"],
+      tmplIds: ["HOTKEY_TEMPLATE_ID"],
+    });
+  }
+
   return (
     <View className="page">
       <View className="hero">
@@ -113,7 +138,9 @@ export default function IndexPage() {
           <Button className="button" onClick={handlePlatformLogin}>
             {isLoggedIn ? "已登录" : "平台登录"}
           </Button>
-          <Button className="ghostButton">提醒入口</Button>
+          <Button className="ghostButton" onClick={handleSubscribeMessage}>
+            订阅消息提醒入口
+          </Button>
         </View>
       </View>
 
@@ -156,6 +183,16 @@ export default function IndexPage() {
               <View className="idea" key={idea.title}>
                 <Text className="ideaTitle">{idea.title}</Text>
                 <Text className="ideaText">{idea.angle}</Text>
+              </View>
+            ))}
+          </View>
+
+          <View className="panel">
+            <Text className="title">通知列表</Text>
+            {notificationItems.items.map((item) => (
+              <View className="idea" key={item.id}>
+                <Text className="ideaTitle">{item.channel === "in_app" ? "站内提醒入口" : "邮件通知"}</Text>
+                <Text className="ideaText">状态：{item.status}</Text>
               </View>
             ))}
           </View>
