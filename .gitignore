@@ -1,8 +1,8 @@
-__pycache__/
-*.py[cod]
-.pytest_cache/
 node_modules/
 dist/
-.next/
+.swc/
 .env
 .env.local
+npm-debug.log*
+__pycache__/
+tests/__pycache__/
