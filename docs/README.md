@@ -1,44 +1,45 @@
-# HotKey 文档中心
+# 文档目录 - hotkey-miniapp
 
-本目录只保留 Go 后端全面重构后的长期事实源文档。旧 FastAPI 实现、旧编号计划、中间验收包、静态 OpenAPI 产物和一次性审计记录不再保留在当前文档树中，避免污染后续实现上下文。
+本目录包含 hotkey-miniapp 项目的各类文档，按类型组织。
 
-## 当前目录
+## 目录结构
 
-- `product/prd/`：按产品能力维护 PRD，编号从 `1` 开始。
-- `plans/`：按全局连续编号维护实现计划；一个 PRD 可以通过 `downstream` 拆分到多个 Plan。
-- `engineering/`：长期架构与工程治理设计。
-- `acceptance/`：后续存放可复测验收证据。
-- `operations/`：后续存放部署、运行和回滚手册。
-- `archive/`：后续只存放仍有长期价值的归档说明。
-
-## 编号规则
-
-- `1-13`：P0 开源核心闭环。
-- `14-16`：P1 平台化能力。
-- `17-19`：P2 商业化与规模化能力。
-- `20-22`：P3 高级实时与事件图谱。
-- `23-25`：n8n 外部自动化编排、热点内容采集和 AI 日报邮件工作流。
-- `26`：系统端到端可运行与基础设施对接（后端接 PG/Redis、Web 接真实 API、Docker 部署）。
-
-Plan 编号独立连续。`1-22` 保持既有 PRD 与 Plan 同号结构；`23+` 允许一个 PRD 通过 frontmatter `downstream` 指向多个后续 Plan，用于进一步拆解执行内容。
-
-## 里程碑规则
-
-- 一个 Epic 对应一个里程碑，GitHub 与 Linear 必须保持同名或等价命名。
-- Epic issue 和其下属任务 issue 必须分配到同一个里程碑。
-- P0、P1、P2、P3 里程碑关闭前，必须确认对应 PRD、Plan、实现、测试、验收和发布说明已经闭环。
-- 里程碑推进过程中的临时记录、过程清单和一次性排查材料不进入 `docs/`。
-
-每个 PRD 必须有：
-
-```text
-docs/product/prd/N-能力名称PRD.md
+```
+docs/
+├── README.md          # 本文件
+├── TEMPLATE.md        # 标准文档模板
+├── prd/               # 产品需求文档（编号 1-25）
+├── plans/             # 实现计划（编号 1-30）
+├── design/            # 技术设计文档
+├── acceptance/        # 验收测试文档
+└── operations/        # 运维文档
 ```
 
-每个 Plan 必须有：
+## 文档规范
 
-```text
-docs/plans/N-能力名称实现计划.md
-```
+### 文档要求
+- 只有对项目有长期影响的文档才放入 `docs/`
+- 临时事项如待办列表、进度笔记放在 OpenSpec change 任务中
+- 正式文档需要 YAML frontmatter，包含 `layer`、`doc_no`、`audience`、`purpose` 等元数据字段
+- 使用 `TEMPLATE.md` 作为标准模板
 
-PRD 与 Plan 的关联以 PRD frontmatter `downstream` 为事实源。
+### 文档类型
+
+| 目录 | 说明 | 编号规则 |
+|------|------|----------|
+| `prd/` | 产品需求文档 | 编号 1-25 |
+| `plans/` | 实现计划 | 编号 1-30 |
+| `design/` | 技术设计文档 | 自由命名 |
+| `acceptance/` | 验收测试文档 | 自由命名 |
+| `operations/` | 运维文档 | 自由命名 |
+
+### 文档生命周期
+
+1. **草稿**：`status: draft`
+2. **评审中**：`status: review`
+3. **已批准**：`status: approved`
+4. **已废弃**：`status: deprecated`
+
+### 变更记录
+
+每个文档必须包含变更记录部分，记录版本、日期、作者和变更说明。

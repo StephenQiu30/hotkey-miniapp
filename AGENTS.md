@@ -1,39 +1,5 @@
 # AGENTS.md
 
-<<<<<<< HEAD
-This repository contains `hotkey-server`, the Go backend for HotKey.
-
-## Scope
-
-Current work is server-only. Do not modify `hotkey-web` or `hotkey-miniapp` from this repository workflow.
-
-## Workflow
-
-- Linear issues are the task source of truth.
-- Symphony reads `WORKFLOW.md` and runs each issue in an isolated workspace.
-- Keep cleanup tasks separate from feature tasks.
-- Preserve unrelated user changes.
-- Use Chinese commit messages.
-
-## Go Standards
-
-- Use standard Go layout under `cmd/` and `internal/`.
-- Keep domain logic independent from HTTP, SQL, and external SDKs.
-- Put HTTP routing under `internal/transport/http`.
-- Put external integrations under `internal/platform`.
-- Put persistence under `internal/repository/postgres`.
-- Put database migrations under `migrations/`.
-
-## Required Checks
-
-Run before handoff:
-
-```bash
-gofmt -w cmd internal
-go test ./...
-python3 -m unittest discover -s tests
-```
-=======
 本文件用于存放 `hotkey-miniapp` 的项目开发规范。通用规则同步自 `hotkey-server/AGENTS.md`，端侧规则只补充 Taro 小程序特有约束。
 
 ## HotKey 跨仓通用规范
@@ -74,4 +40,3 @@ hotkey-server 是跨仓库 AGENTS.md 主规范源。通用工程规范、OpenAPI
 1. 新增功能优先走红绿重构：先写失败测试，再写最小实现，最后重构。
 2. 小程序 PR 必须说明生成客户端是否变化，以及对应 server OpenAPI 来源。
 3. 验收证据至少包含测试命令、构建结果和微信小程序主链路验证结果。
->>>>>>> 0b80f8c7fc124072042ecf99e3a52a56b2ba856f
