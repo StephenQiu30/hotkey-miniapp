@@ -1,43 +1,44 @@
-# hotkey-miniapp
+# HotKey 工作区
 
-`hotkey-miniapp` 是 HotKey 内容创作者热点选题工具的 Taro 跨端小程序。
+本目录用于统一整理 HotKey 三个业务子项目：
 
-本仓不维护后端 API 契约事实源。后端接口以 `hotkey-server` 的 Swagger/OpenAPI 为准，小程序端必须通过 `@umijs/openapi` 生成 API 客户端。
+1. `hotkey-server`：后端服务与 OpenAPI 契约事实源。
+2. `hotkey-web`：Next.js Web 创作者工作台。
+3. `hotkey-miniapp`：Taro 跨端小程序。
 
-## P0 职责
+根目录不再承载业务代码，只作为本地工作区和跨仓协作入口。业务实现、测试、构建和提交说明都应放在对应子项目目录中。
 
-1. Taro 平台登录并换取后端会话。
-2. 热点榜单与热点详情。
-3. AI 快速理解热点展示。
-4. 收藏和关注。
-5. 提醒入口与订阅消息能力预留。
+## 协作顺序
 
-## 技术栈
-
-- Taro + React + TypeScript
-- `@umijs/openapi`
-- 优先微信小程序构建，预留支付宝、抖音等端
-
-## 跨仓协作顺序
-
-默认顺序：
+默认跨仓执行顺序：
 
 ```text
 server -> web -> miniapp -> 回归
 ```
 
-小程序端只有在 `hotkey-server` 的 OpenAPI 契约稳定后，才生成客户端并接入页面。
+后端接口变化先在 `hotkey-server` 稳定 OpenAPI，再由 `hotkey-web` 和 `hotkey-miniapp` 使用 `@umijs/openapi` 生成客户端。
 
-## 规范文件
+## 目录说明
 
-- [AGENTS.md](./AGENTS.md)：小程序仓规范，通用部分同步自 `hotkey-server`。
+| 目录 | 用途 |
+| --- | --- |
+| `hotkey-server/` | Go 后端服务、迁移、OpenAPI、后端验收测试 |
+| `hotkey-web/` | Next.js Web 前端、Web 客户端生成、工作台 UI |
+| `hotkey-miniapp/` | Taro 小程序、端侧客户端生成、小程序主链路 |
 
-## M0 验证
-
-运行仓库治理基线测试：
+## 常用入口
 
 ```bash
-python3 -m unittest discover -s tests -p 'test_repository_governance.py'
+cd hotkey-server
+go test ./...
+
+cd ../hotkey-web
+npm test
+npm run build
+
+cd ../hotkey-miniapp
+npm test
+npm run build:weapp
 ```
 
-该测试用于确认本仓声明了 Taro 跨端小程序职责、`@umijs/openapi` 生成客户端规则和跨仓协作顺序。
+实际可用命令以各子项目 `package.json`、`Makefile` 和 `README.md` 为准。
