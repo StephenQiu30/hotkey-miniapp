@@ -1,4 +1,4 @@
-# Pull Request
+# Pull Request - hotkey-miniapp
 
 ## 描述
 
@@ -25,8 +25,6 @@
 - [ ] Unit（单元测试）
 - [ ] Integration（集成测试）
 - [ ] UI（UI 测试）
-- [ ] Snapshot（快照测试）
-- [ ] Performance（性能测试）
 
 ## Commands run
 
@@ -34,8 +32,8 @@
 
 ```bash
 # 示例命令
-go test ./...
-npm run test
+npx taro build --type weapp
+npx tsc --noEmit
 ```
 
 ## Result
@@ -55,7 +53,7 @@ npm run test
 
 <!-- 为审查者提供的检查清单 -->
 
-- [ ] 代码遵循项目编码规范
+- [ ] 代码遵循微信小程序开发规范
 - [ ] 自我审查了代码更改
 - [ ] 代码有适当的注释，特别是难以理解的地方
 - [ ] 相应地进行了文档更改
@@ -63,6 +61,8 @@ npm run test
 - [ ] 添加了证明修复有效或功能正常的测试
 - [ ] 新的和现有的单元测试在本地通过
 - [ ] 任何依赖的更改都已合并和发布
+- [ ] TypeScript 类型检查通过
+- [ ] 构建成功
 
 ## 附加信息
 

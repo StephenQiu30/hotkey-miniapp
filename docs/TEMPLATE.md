@@ -1,87 +1,108 @@
 ---
-layer: guide
-doc_no: "TEMPLATE"
+layer: PRD
+doc_no: DOC-001
 audience:
   - PM
-  - Tech-Lead
   - Dev
   - QA
   - Ops
-feature_area: documentation
-purpose: "定义 Go 重构后 HotKey 文档标准，保证 PRD、Plan、Design、Acceptance、Operations 可追踪。"
-canonical_path: docs/TEMPLATE.md
-status: active
-version: "3.0.0"
-owner: "StephenQiu30"
-inputs:
-  - AGENTS.md
-outputs:
-  - docs 文档格式规范
-triggers:
-  - 新增长期文档
-  - 调整文档目录
-  - 调整编号体系
-downstream:
-  - docs/README.md
+feature_area: ""
+purpose: "定义产品边界、技术边界或验收边界"
+canonical_path: docs/
+status: draft
+version: 0.1.0
+owner: ""
+inputs: []
+outputs: []
+triggers: []
+downstream: []
 ---
 
-# HotKey 文档模板
+# 文档标题
 
-## 1. Frontmatter
+## 1. 背景
 
-正式长期文档必须包含：
+说明为何需要此文档，当前遇到的问题及其沉淀价值。
 
-```yaml
-layer: PRD | Plan | Design | Acceptance | Operations | guide
-doc_no: "1"
-audience:
-  - PM
-  - Dev
-  - QA
-feature_area: "area-name"
-purpose: "一句话说明本稿解决什么问题"
-canonical_path: "docs/path/file.md"
-status: draft | approved | archived
-version: "1.0.0"
-owner: "StephenQiu30"
-inputs:
-  - "上游文档"
-outputs:
-  - "本稿产物"
-triggers:
-  - "何时更新"
-downstream:
-  - "下游文档"
+## 2. 目标
+
+遵循 SMART 原则：
+
+- **Specific（具体）**：
+- **Measurable（可衡量）**：
+- **Achievable（可达成）**：
+- **Relevant（相关）**：
+- **Time-bound（有时限）**：
+
+BDD 场景示例：
+```gherkin
+Given [前提条件]
+When [触发条件]
+Then [预期结果]
 ```
 
-## 2. PRD 必含章节
+## 3. 非目标
 
-- 背景
-- 目标
-- 范围
-- 非目标
+明确不解决的事项，防止范围膨胀。
+
+## 4. 核心内容
+
+### PRD（产品需求）
 - 用户故事
-- 数据与 API 边界
-- 验收标准
-- 风险与降级
-- 变更记录
+- 产品边界
 
-## 3. Plan 必含章节
-
-- 目标
-- 文件清单
+### Plan（计划）
+- 阶段计划
 - 任务拆解
-- TDD 与验证
-- 执行顺序
-- 回滚策略
-- 验收命令
-- 变更记录
+- 风险评估
 
-## 4. 质量门禁
+### Design（设计）
+- 技术方案
+- 架构决策
 
-- 禁止占位标记和未定稿提示。
-- PRD 和 Plan 必须各自保持全局连续编号；一个 PRD 可以通过 `downstream` 指向多个 Plan。
-- 文件名必须从 `1` 开始的新体系派生，不沿用旧 FastAPI 编号。
-- 过程记录、一次性检查、临时任务清单和中间状态文件不进入 `docs/`。
-- 只有最终有长期价值的事实源文档可以进入 `docs/`。
-- 任务 issue 必须绑定所属 Epic 对应的里程碑。
+### Acceptance（验收）
+- 验收门禁
+- 测试场景
+
+### Operations（运维）
+- 发布流程
+- 部署流程
+- 回滚流程
+
+## 5. 关联文档
+
+### 输入文档
+- 文档名称
+
+### 输出文档
+- 文档名称
+
+### 下游文档
+- 文档名称
+
+## 6. 验收门禁
+
+判断文档"完整、可执行、可验证"的标准。
+
+- [ ] 文档结构完整
+- [ ] 目标符合 SMART 原则
+- [ ] 验收标准明确
+- [ ] 风险已识别
+
+## 7. 风险与边界
+
+- 风险 1
+- 前置依赖
+- 延期事项
+- 需人工确认的问题
+
+## 8. 待确认问题
+
+- [ ] 开放问题 1
+- [ ] 开放问题 2
+
+## 9. 变更记录
+
+| 日期 | 作者 | 版本 | 变更说明 |
+|------|------|------|----------|
+| | | 0.1.0 | 初始版本 |

@@ -1,39 +1,28 @@
-# CLAUDE.md
+# CLAUDE.md — hotkey-miniapp
 
-本文件为 Claude Code 提供在本仓库中工作的指导规范。
+本文件为 Claude Code 提供在 hotkey-miniapp 仓库中工作的指导规范。
 
 ## 项目概述
 
-HotKey 是一个面向内容创作者的 AI 实时热点话题监控平台。包含三个独立子项目：
+hotkey-miniapp 是 HotKey 平台的微信小程序，面向移动端内容创作者。
 
-- **hotkey-server** — Go 1.25 + Gin 后端（API、关键词管理、来源采集、内容标准化、pgvector 聚类、证据链、热点排名、日报）
-- **hotkey-web** — Next.js 16 + React 19 + Tailwind CSS 4 + shadcn/ui Web 工作台
-- **hotkey-miniapp** — Taro 4 + React 18 微信小程序
+### 技术栈
+- Taro 4 + React 18
+- 微信小程序
 
-基础设施：PostgreSQL + pgvector、Redis、阿里云 DashScope（Qwen 模型、text-embedding-v2）。
+### 项目结构
+```
+hotkey-miniapp/
+├── src/
+│   └── pages/
+│       └── index/      # 单页面小程序
+├── config/             # Taro 配置
+├── package.json        # 依赖配置
+└── tsconfig.json       # TypeScript 配置
+```
 
 ## 常用命令
 
-### hotkey-server（在 `hotkey-server/` 目录下运行）
-```bash
-go run ./cmd/server                          # 启动服务器
-HOTKEY_HTTP_ADDR=127.0.0.1:18080 go run ./cmd/server  # 自定义地址
-go test ./...                                # 运行所有测试
-go test ./internal/hotspot/...               # 运行单个包测试
-curl http://127.0.0.1:18080/healthz          # 健康检查
-curl http://127.0.0.1:18080/openapi.json     # 导出 OpenAPI 规范
-```
-
-### hotkey-web（在 `hotkey-web/` 目录下运行）
-```bash
-npm run dev           # 开发服务器
-npm run build         # 生产构建
-npx tsc --noEmit      # 类型检查
-npx openapi2ts        # 从服务器 OpenAPI 重新生成 API 客户端
-python3 -m unittest discover -s tests   # 治理/契约测试
-```
-
-### hotkey-miniapp（在 `hotkey-miniapp/` 目录下运行）
 ```bash
 npx taro build --type weapp            # 构建微信小程序
 npx taro build --type weapp --watch    # 开发模式带监听
@@ -44,29 +33,15 @@ python3 -m unittest discover -s tests  # 治理/契约测试
 
 ## 架构
 
-### 跨仓库 API 契约
-`hotkey-server` 是 API 的唯一事实来源。两个前端通过 `@umijs/openapi` 从服务器的 OpenAPI 规范（`/openapi.json`）生成 TypeScript 客户端。绝不手写后端 API 类型。
+### API 客户端生成
+- 从 `hotkey-server` 的 OpenAPI 规范生成
+- 使用 `@umijs/openapi` 工具
+- 生成路径：`src/services/hotkey/hotkey-server/`
+- **绝不手写后端 API 类型**
 
-生成顺序：服务器优先，然后 web，然后 miniapp。
-
-### 服务器结构（hotkey-server/internal/）
-- `httpapi/router.go` — 中央 Gin 路由器，所有 50+ 端点，请求/响应类型（最重要的文件）
-- `config/config.go` — 基于环境的配置加载器
-- `openapi/spec.go` — OpenAPI 规范生成
-- 领域包：`keyword/`、`source/`、`content/`、`event/`、`eventgraph/`、`hotspot/`、`report/`、`trust/`、`propagation/`、`realtime/`、`redisinfra/`、`adminapi/`、`tenant/`、`rbac/`、`billing/`、`workqueue/`
-- `db/schema.sql` — 完整的 PostgreSQL 模式（50+ 表，含 pgvector）
-
-当前所有领域服务使用内存仓库；PostgreSQL/Redis 持久化正在逐步接入。
-
-### 前端结构
-- `hotkey-web/app/` — Next.js App Router（layout.tsx、page.tsx）
-- `hotkey-web/src/components/CreatorWorkbench.tsx` — 主 UI 组件
-- `hotkey-web/src/services/hotkey/hotkey-server/` — 自动生成的 API 客户端
-- `hotkey-miniapp/src/pages/index/` — 单页面小程序
-- `hotkey-miniapp/src/services/hotkey/hotkey-server/` — 自动生成的 API 客户端
-
-### n8n 集成
-`hotkey-server/n8n/` 包含工作流定义。服务器通过 `/api/v1/internal/*` 端点（经 `HOTKEY_INTERNAL_API_KEY` 认证）供 n8n 回调。
+### 页面结构
+- `src/pages/index/` — 单页面小程序
+- 遵循微信小程序开发规范
 
 ---
 
@@ -120,26 +95,6 @@ python3 -m unittest discover -s tests  # 治理/契约测试
 
 ---
 
-## 文档规范
-
-### docs 目录结构
-```
-docs/
-├── prd/           # 产品需求文档（编号 1-25）
-├── plans/         # 实现计划（编号 1-30）
-├── design/        # 技术设计文档
-├── acceptance/    # 验收测试文档
-└── operations/    # 运维文档
-```
-
-### 文档要求
-- 只有对项目有长期影响的文档才放入 `docs/`
-- 临时事项如待办列表、进度笔记放在 OpenSpec change 任务中
-- 正式文档需要 YAML frontmatter，包含 `layer`、`doc_no`、`audience`、`purpose` 等元数据字段
-- 使用 `docs/TEMPLATE.md` 作为标准模板
-
----
-
 ## Git 提交规范
 
 1. 重大变更后必须先完成测试和验证
@@ -159,31 +114,6 @@ docs/
 4. 多个 PR 按用户指定顺序合并，每次合并间重新检查冲突
 5. PR 描述必须包含：Test-first Evidence、Tests added、Commands run、Result、Agent Usage、Reviewer Checklist
 
-### PR 模板
-```
-## Test-first Evidence
-（测试先行的证据）
-
-## Tests added
-- [ ] Unit
-- [ ] Integration
-- [ ] UI
-- [ ] Snapshot
-- [ ] Performance
-
-## Commands run
-（运行的命令）
-
-## Result
-（结果）
-
-## Agent Usage
-（区分人工编写和 Agent 生成的工作）
-
-## Reviewer Checklist
-（优先审查测试提交）
-```
-
 ---
 
 ## 角色协作结构
@@ -201,7 +131,6 @@ docs/
 ### 角色配置
 - 角色配置存放于 `.claude/agents/` 目录
 - 可复用流程存放于 `.claude/skills/` 目录
-- OpenSpec 配置存放于 `openspec/` 目录
 
 ### 标准执行流程
 **Explorer → PM → Builder → Tester → Reporter**
@@ -210,16 +139,6 @@ docs/
 3. Builder 实现最少变更
 4. Tester 通过测试和 lint 验证
 5. Reporter 总结变更内容、验证方式、剩余风险
-
----
-
-## 并行拆分与收口
-
-1. 大型任务必须先产出拆分计划
-2. 子角色交付干净的结果，包含输出、证据路径、风险项
-3. 主代理只负责协调边界和合并冲突，不复述中间推理
-4. 子任务间通过明确的输入输出接口通信
-5. 主代理在所有子任务完成后统一收口
 
 ---
 
@@ -235,22 +154,7 @@ docs/
 
 ---
 
-## Harness 能力要求
-
-1. 本地启动脚本可用
-2. 统一验证命令可用
-3. `.env.example` 文档完整
-4. 可重复的验证方法
-5. 前端任务使用 Playwright 提供证据
-6. 参考相关 skill 文件：本地服务器设置、Playwright 证据、Linear 集成
-
----
-
 ## 环境配置
 
-复制 `hotkey-server/.env.example` 到 `.env` 并配置。关键变量：
-- `HOTKEY_HTTP_ADDR` — 服务器地址
-- `HOTKEY_DATABASE_URL` — 数据库连接
-- `HOTKEY_REDIS_URL` — Redis 连接
-- `HOTKEY_DASHSCOPE_API_KEY` — DashScope API 密钥
-- `HOTKEY_INTERNAL_API_KEY` — 内部 API 密钥
+复制 `.env.example` 到 `.env` 并配置。关键变量：
+- `TARO_APP_API_URL` — API 服务器地址
