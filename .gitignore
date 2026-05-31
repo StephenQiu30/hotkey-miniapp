@@ -16,6 +16,10 @@ node_modules/
 .next/
 dist/
 coverage/
+npm-debug.log*
+
+# Taro
+.swc/
 
 # Env
 .env
@@ -28,3 +32,6 @@ coverage/
 # IDE
 .idea/
 .vscode/
+
+# Testing
+tests/__pycache__/
