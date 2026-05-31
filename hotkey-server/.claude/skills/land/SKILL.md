@@ -1,70 +1,225 @@
 ---
 name: land
-description: 通过监控冲突、解决冲突、等待检查、压缩合并来落地 PR
+description:
+  Land a PR by monitoring conflicts, resolving them, waiting for checks, and
+  squash-merging when green; use when asked to land, merge, or shepherd a PR to
+  completion.
 ---
 
-# Land Skill
+# Land
 
-通过监控冲突、解决冲突、等待检查通过、压缩合并来落地 PR。
+## Goals
 
-## 目标
+- Ensure the PR is conflict-free with main.
+- Keep CI green and fix failures when they occur.
+- Squash-merge the PR once checks pass.
+- Do not yield to the user until the PR is merged; keep the watcher loop running
+  unless blocked.
+- No need to delete remote branches after merge; the repo auto-deletes head
+  branches.
 
-- 保持 PR 与 main 无冲突
-- 保持 CI 绿色
-- 准备就绪时执行压缩合并
-- 持续执行直到合并完成，不向用户交出控制权
+## Preconditions
 
-## 前提条件
+- `gh` CLI is authenticated.
+- You are on the PR branch with a clean working tree.
 
-- 已认证的 `gh` CLI
-- 在 PR 分支上，工作区干净
+## Steps
 
-## 步骤
+1. Locate the PR for the current branch.
+2. Confirm the full gauntlet is green locally before any push.
+3. If the working tree has uncommitted changes, commit with the `commit` skill
+   and push with the `push` skill before proceeding.
+4. Check mergeability and conflicts against main.
+5. If conflicts exist, use the `pull` skill to fetch/merge `origin/main` and
+   resolve conflicts, then use the `push` skill to publish the updated branch.
+6. Ensure Claude review comments (if present) are acknowledged and any required
+   fixes are handled before merging.
+7. Watch checks until complete.
+8. If checks fail, pull logs, fix the issue, commit with the `commit` skill,
+   push with the `push` skill, and re-run checks.
+9. When all checks are green and review feedback is addressed, squash-merge and
+   delete the branch using the PR title/body for the merge subject/body.
+10. **Context guard:** Before implementing review feedback, confirm it does not
+    conflict with the user’s stated intent or task context. If it conflicts,
+    respond inline with a justification and ask the user before changing code.
+11. **Pushback template:** When disagreeing, reply inline with: acknowledge +
+    rationale + offer alternative.
+12. **Ambiguity gate:** When ambiguity blocks progress, use the clarification
+    flow (assign PR to current GH user, mention them, wait for response). Do not
+    implement until ambiguity is resolved.
+    - If you are confident you know better than the reviewer, you may proceed
+      without asking the user, but reply inline with your rationale.
+13. **Per-comment mode:** For each review comment, choose one of: accept,
+    clarify, or push back. Reply inline (or in the issue thread for Claude
+    reviews) stating the mode before changing code.
+14. **Reply before change:** Always respond with intended action before pushing
+    code changes (inline for review comments, issue thread for Claude reviews).
 
-1. **定位 PR** — 获取当前分支的 PR
-2. **本地确认绿色** — 推送前本地验证
-3. **提交并推送** — 使用相关技能提交推送未提交变更
-4. **检查可合并性/冲突** — 对照 main 检查
-5. **解决冲突** — 通过 `pull` skill（fetch/merge `origin/main`），然后推送
-6. **处理 Codex 评审评论** — 识别并处理所需修复
-7. **监控检查** — 直到完成
-8. **修复失败** — 拉取日志、修复、提交、推送、重新运行
-9. **压缩合并** — 使用 PR 标题/正文，删除分支
-10. **上下文守卫** — 验证评审反馈不与用户陈述的意图冲突
-11. **推送回退模板** — 不同意时：承认 + 依据 + 提供替代方案
-12. **歧义门** — 使用澄清流程（分配 PR、提及用户、等待）
-13. **逐评论模式** — 对每个评审评论选择接受、澄清或推回
-14. **先回复再变更** — 推送前始终回复预期操作
+## Commands
 
-## 评审处理协议
+```
+# Ensure branch and PR context
+branch=$(git branch --show-current)
+pr_number=$(gh pr view --json number -q .number)
+pr_title=$(gh pr view --json title -q .title)
+pr_body=$(gh pr view --json body -q .body)
 
-### Codex 评审
-- Codex 评审以 GitHub Actions 的 issue 评论形式到达，以 `## Codex Review — <persona>` 开头
-- 所有代理生成的评论必须以 `[codex]` 前缀
+# Check mergeability and conflicts
+mergeable=$(gh pr view --json mergeable -q .mergeable)
 
-### 人工评审
-- 人工评审评论是阻塞项，必须在合并前解决
-- 同一线程中的多个评审者每个都需要回复
+if [ "$mergeable" = "CONFLICTING" ]; then
+  # Run the `pull` skill to handle fetch + merge + conflict resolution.
+  # Then run the `push` skill to publish the updated branch.
+fi
 
-### 评论分类
-每个评审评论应分类为：
-- **correctness**：正确性问题，需要具体验证
-- **design**：设计问题
-- **style**：风格问题
-- **clarification**：澄清问题
-- **scope**：范围问题
+# Preferred: use the Async Watch Helper below. The manual loop is a fallback
+# when Python cannot run or the helper script is unavailable.
+# Wait for review feedback: Claude reviews arrive as issue comments that start
+# with "## Claude Review — <persona>". Treat them like reviewer feedback: reply
+# with a `[claude]` issue comment acknowledging the findings and whether you're
+# addressing or deferring them.
+while true; do
+  gh api repos/{owner}/{repo}/issues/"$pr_number"/comments \
+    --jq '.[] | select(.body | startswith("## Claude Review")) | .id' | rg -q '.' \
+    && break
+  sleep 10
+done
 
-### 响应策略
-- 接受反馈时包含依据
-- 拒绝时提供替代方案或后续触发器
-- 优先使用单个整合的"评审已处理"根级评论
+# Watch checks
+if ! gh pr checks --watch; then
+  gh pr checks
+  # Identify failing run and inspect logs
+  # gh run list --branch "$branch"
+  # gh run view <run-id> --log
+  exit 1
+fi
 
-## 失败处理
+# Squash-merge (remote branches auto-delete on merge in this repo)
+gh pr merge --squash --subject "$pr_title" --body "$pr_body"
+```
 
-- 失败的检查触发本地修复 → 提交 → 推送 → 重新监控
-- 不稳定的失败（如单平台超时）可使用判断跳过
-- GitHub Actions 的自动修复提交"不会触发新的 CI 运行" — 检测更新的 head，拉取，合并 main，添加真实提交，强制推送
-- 损坏的 pnpm lockfile 错误需要获取最新 `origin/main`，合并，强制推送，重新运行 CI
-- `UNKNOWN` 可合并性表示等待并重新检查
-- **绝不带未解决的评审评论合并**
-- **不启用自动合并** — "此仓库无必需检查，自动合并可跳过测试"
+## Async Watch Helper
+
+Preferred: use the asyncio watcher to monitor review comments, CI, and head
+updates in parallel:
+
+```
+python3 .claude/skills/land/land_watch.py
+```
+
+Exit codes:
+
+- 2: Review comments detected (address feedback)
+- 3: CI checks failed
+- 4: PR head updated (autofix commit detected)
+
+## Failure Handling
+
+- If checks fail, pull details with `gh pr checks` and `gh run view --log`, then
+  fix locally, commit with the `commit` skill, push with the `push` skill, and
+  re-run the watch.
+- Use judgment to identify flaky failures. If a failure is a flake (e.g., a
+  timeout on only one platform), you may proceed without fixing it.
+- If CI pushes an auto-fix commit (authored by GitHub Actions), it does not
+  trigger a fresh CI run. Detect the updated PR head, pull locally, merge
+  `origin/main` if needed, add a real author commit, and force-push to retrigger
+  CI, then restart the checks loop.
+- If all jobs fail with corrupted pnpm lockfile errors on the merge commit, the
+  remediation is to fetch latest `origin/main`, merge, force-push, and rerun CI.
+- If mergeability is `UNKNOWN`, wait and re-check.
+- Do not merge while review comments (human or Claude review) are outstanding.
+- Claude review jobs retry on failure and are non-blocking; use the presence of
+  `## Claude Review — <persona>` issue comments (not job status) as the signal
+  that review feedback is available.
+- Do not enable auto-merge; this repo has no required checks so auto-merge can
+  skip tests.
+- If the remote PR branch advanced due to your own prior force-push or merge,
+  avoid redundant merges; re-run the formatter locally if needed and
+  `git push --force-with-lease`.
+
+## Review Handling
+
+- Claude reviews now arrive as issue comments posted by GitHub Actions. They
+  start with `## Claude Review — <persona>` and include the reviewer’s
+  methodology + guardrails used. Treat these as feedback that must be
+  acknowledged before merge.
+- Human review comments are blocking and must be addressed (responded to and
+  resolved) before requesting a new review or merging.
+- If multiple reviewers comment in the same thread, respond to each comment
+  (batching is fine) before closing the thread.
+- Fetch review comments via `gh api` and reply with a prefixed comment.
+- Use review comment endpoints (not issue comments) to find inline feedback:
+  - List PR review comments:
+    ```
+    gh api repos/{owner}/{repo}/pulls/<pr_number>/comments
+    ```
+  - PR issue comments (top-level discussion):
+    ```
+    gh api repos/{owner}/{repo}/issues/<pr_number>/comments
+    ```
+  - Reply to a specific review comment:
+    ```
+    gh api -X POST /repos/{owner}/{repo}/pulls/<pr_number>/comments \
+      -f body='[claude] <response>' -F in_reply_to=<comment_id>
+    ```
+- `in_reply_to` must be the numeric review comment id (e.g., `2710521800`), not
+  the GraphQL node id (e.g., `PRRC_...`), and the endpoint must include the PR
+  number (`/pulls/<pr_number>/comments`).
+- If GraphQL review reply mutation is forbidden, use REST.
+- A 404 on reply typically means the wrong endpoint (missing PR number) or
+  insufficient scope; verify by listing comments first.
+- All GitHub comments generated by this agent must be prefixed with `[claude]`.
+- For Claude review issue comments, reply in the issue thread (not a review
+  thread) with `[claude]` and state whether you will address the feedback now or
+  defer it (include rationale).
+- If feedback requires changes:
+  - For inline review comments (human), reply with intended fixes
+    (`[claude] ...`) **as an inline reply to the original review comment** using
+    the review comment endpoint and `in_reply_to` (do not use issue comments for
+    this).
+  - Implement fixes, commit, push.
+  - Reply with the fix details and commit sha (`[claude] ...`) in the same place
+    you acknowledged the feedback (issue comment for Claude reviews, inline reply
+    for review comments).
+  - The land watcher treats Claude review issue comments as unresolved until a
+    newer `[claude]` issue comment is posted acknowledging the findings.
+- Only request a new Claude review when you need a rerun (e.g., after new
+  commits). Do not request one without changes since the last review.
+  - Before requesting a new Claude review, re-run the land watcher and ensure
+    there are zero outstanding review comments (all have `[claude]` inline
+    replies).
+  - After pushing new commits, the Claude review workflow will rerun on PR
+    synchronization (or you can re-run the workflow manually). Post a concise
+    root-level summary comment so reviewers have the latest delta:
+    ```
+    [claude] Changes since last review:
+    - <short bullets of deltas>
+    Commits: <sha>, <sha>
+    Tests: <commands run>
+    ```
+  - Only request a new review if there is at least one new commit since the
+    previous request.
+  - Wait for the next Claude review comment before merging.
+
+## Scope + PR Metadata
+
+- The PR title and description should reflect the full scope of the change, not
+  just the most recent fix.
+- If review feedback expands scope, decide whether to include it now or defer
+  it. You can accept, defer, or decline feedback. If deferring or declining,
+  call it out in the root-level `[claude]` update with a brief reason (e.g.,
+  out-of-scope, conflicts with intent, unnecessary).
+- Correctness issues raised in review comments should be addressed. If you plan
+  to defer or decline a correctness concern, validate first and explain why the
+  concern does not apply.
+- Classify each review comment as one of: correctness, design, style,
+  clarification, scope.
+- For correctness feedback, provide concrete validation (test, log, or
+  reasoning) before closing it.
+- When accepting feedback, include a one-line rationale in the root-level
+  update.
+- When declining feedback, offer a brief alternative or follow-up trigger.
+- Prefer a single consolidated "review addressed" root-level comment after a
+  batch of fixes instead of many small updates.
+- For doc feedback, confirm the doc change matches behavior (no doc-only edits
+  to appease review).

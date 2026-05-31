@@ -1,47 +1,117 @@
 ---
 name: push
-description: 推送当前分支变更到 origin 并创建/更新 PR
+description:
+  Push current branch changes to origin and create or update the corresponding
+  pull request; use when asked to push, publish updates, or create pull request.
 ---
 
-# Push Skill
+# Push
 
-处理推送当前分支变更到 origin 并创建/更新对应的 PR。
+## Prerequisites
 
-## 前提条件
+- `gh` CLI is installed and available in `PATH`.
+- `gh auth status` succeeds for GitHub operations in this repo.
 
-- `gh` CLI 已安装并在 `PATH` 中
-- 成功执行 `gh auth status`
+## Goals
 
-## 目标
+- Push current branch changes to `origin` safely.
+- Create a PR if none exists for the branch, otherwise update the existing PR.
+- Keep branch history clean when remote has moved.
 
-1. 安全推送当前分支变更到 `origin`
-2. 如无 PR 则创建，有则更新
-3. 远程历史移动时保持分支历史干净
+## Related Skills
 
-## 步骤
+- `pull`: use this when push is rejected or sync is not clean (non-fast-forward,
+  merge conflict risk, or stale branch).
 
-1. **识别** — 获取当前分支名并确认远程状态
-2. **运行验证** — 在推送前执行项目验证命令
-3. **推送分支** — 使用 `git push -u origin HEAD`
-4. **处理推送失败：**
-   - 非快进/同步问题 → 调用 `pull` skill，解决冲突，重新验证，重试
-   - 仅当历史被重写时使用 `--force-with-lease`
-   - 认证/权限/工作流限制失败 → 停止并显示错误
-5. **确保 PR 存在：**
-   - 无则创建
-   - 有则更新
-   - 如关联已关闭/合并的 PR → 创建新分支 + PR
-   - 编写清晰描述变更结果的标题
-   - 更新时重新考虑当前 PR 标题是否仍匹配最新范围
-6. **编写/更新 PR 正文** — 使用 PR 模板：
-   - 填写每个部分的具体内容
-   - 替换所有占位符 HTML 注释
-   - 更新时刷新正文反映完整 PR 范围
-   - 不复用过时的描述文本
-7. **验证** — 运行验证命令，修复所有报告问题
-8. **回复** — 输出 PR URL
+## Steps
 
-## 重要约束
+1. Identify current branch and confirm remote state.
+2. Run local validation (`make test`) before pushing.
+3. Push branch to `origin` with upstream tracking if needed, using whatever
+   remote URL is already configured.
+4. If push is not clean/rejected:
+   - If the failure is a non-fast-forward or sync problem, run the `pull`
+     skill to merge `origin/main`, resolve conflicts, and rerun validation.
+   - Push again; use `--force-with-lease` only when history was rewritten.
+   - If the failure is due to auth, permissions, or workflow restrictions on
+     the configured remote, stop and surface the exact error instead of
+     rewriting remotes or switching protocols as a workaround.
 
-1. **绝不使用 `--force`**；`--force-with-lease` 是最后手段
-2. **区分同步问题**（→ 使用 `pull` skill）和**远程认证/权限问题**（→ 直接显示错误）
+5. Ensure a PR exists for the branch:
+   - If no PR exists, create one.
+   - If a PR exists and is open, update it.
+   - If branch is tied to a closed/merged PR, create a new branch + PR.
+   - Write a proper PR title that clearly describes the change outcome
+   - For branch updates, explicitly reconsider whether current PR title still
+     matches the latest scope; update it if it no longer does.
+6. Write/update PR body explicitly using HotKey's repository convention:
+   - Include `Test-first Evidence`, `Tests added`, `Commands run`, `Result`,
+     `Agent Usage`, and `Reviewer Checklist`.
+   - Fill every section with concrete content for this change.
+   - If PR already exists, refresh body content so it reflects the total PR
+     scope (all intended work on the branch), not just the newest commits,
+     including newly added work, removed work, or changed approach.
+   - Do not reuse stale description text from earlier iterations.
+7. Re-read the PR body and confirm every required section is present.
+8. Reply with the PR URL from `gh pr view`.
+
+## Commands
+
+```sh
+# Identify branch
+branch=$(git branch --show-current)
+
+# Minimal validation gate
+make test
+
+# Initial push: respect the current origin remote.
+git push -u origin HEAD
+
+# If that failed because the remote moved, use the pull skill. After
+# pull-skill resolution and re-validation, retry the normal push:
+git push -u origin HEAD
+
+# If the configured remote rejects the push for auth, permissions, or workflow
+# restrictions, stop and surface the exact error.
+
+# Only if history was rewritten locally:
+git push --force-with-lease origin HEAD
+
+# Ensure a PR exists (create only if missing)
+pr_state=$(gh pr view --json state -q .state 2>/dev/null || true)
+if [ "$pr_state" = "MERGED" ] || [ "$pr_state" = "CLOSED" ]; then
+  echo "Current branch is tied to a closed PR; create a new branch + PR." >&2
+  exit 1
+fi
+
+# Write a clear, human-friendly title that summarizes the shipped change.
+pr_title="<clear PR title written for this change>"
+if [ -z "$pr_state" ]; then
+  gh pr create --title "$pr_title"
+else
+  # Reconsider title on every branch update; edit if scope shifted.
+  gh pr edit --title "$pr_title"
+fi
+
+# Write/edit PR body to match HotKey's PR convention before validation.
+# Example workflow:
+# 1) draft body content for this PR
+# 2) gh pr edit --body-file /tmp/pr_body.md
+# 3) for branch updates, re-check that title/body still match current diff
+
+tmp_pr_body=$(mktemp)
+gh pr view --json body -q .body > "$tmp_pr_body"
+rg -n "Test-first Evidence|Tests added|Commands run|Result|Agent Usage|Reviewer Checklist" "$tmp_pr_body"
+rm -f "$tmp_pr_body"
+
+# Show PR URL for the reply
+gh pr view --json url -q .url
+```
+
+## Notes
+
+- Do not use `--force`; only use `--force-with-lease` as the last resort.
+- Distinguish sync problems from remote auth/permission problems:
+  - Use the `pull` skill for non-fast-forward or stale-branch issues.
+  - Surface auth, permissions, or workflow restrictions directly instead of
+    changing remotes or protocols.

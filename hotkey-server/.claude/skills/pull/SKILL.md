@@ -1,71 +1,100 @@
 ---
 name: pull
-description: 合并最新 origin/main 到当前分支，解决合并冲突
+description:
+  Pull latest origin/main into the current local branch and resolve merge
+  conflicts (aka update-branch). Use when Claude needs to sync a feature branch
+  with origin, perform a merge-based update (not rebase), and guide conflict
+  resolution best practices.
 ---
 
-# Pull Skill
+# Pull
 
-将最新的 `origin/main` 合并到当前本地分支，解决合并冲突。也称为"update-branch"。
+## Workflow
 
-## 前提条件
+1. Verify git status is clean or commit/stash changes before merging.
+2. Ensure rerere is enabled locally:
+   - `git config rerere.enabled true`
+   - `git config rerere.autoupdate true`
+3. Confirm remotes and branches:
+   - Ensure the `origin` remote exists.
+   - Ensure the current branch is the one to receive the merge.
+4. Fetch latest refs:
+   - `git fetch origin`
+5. Sync the remote feature branch first:
+   - `git pull --ff-only origin $(git branch --show-current)`
+   - This pulls branch updates made remotely (for example, a GitHub auto-commit)
+     before merging `origin/main`.
+6. Merge in order:
+   - Prefer `git -c merge.conflictstyle=zdiff3 merge origin/main` for clearer
+     conflict context.
+7. If conflicts appear, resolve them (see conflict guidance below), then:
+   - `git add <files>`
+   - `git commit` (or `git merge --continue` if the merge is paused)
+8. Verify with project checks (follow repo policy in `AGENTS.md`).
+9. Summarize the merge:
+   - Call out the most challenging conflicts/files and how they were resolved.
+   - Note any assumptions or follow-ups.
 
-- 干净的工作区（已提交或已 stash）
+## Conflict Resolution Guidance (Best Practices)
 
-## 步骤
+- Inspect context before editing:
+  - Use `git status` to list conflicted files.
+  - Use `git diff` or `git diff --merge` to see conflict hunks.
+  - Use `git diff :1:path/to/file :2:path/to/file` and
+    `git diff :1:path/to/file :3:path/to/file` to compare base vs ours/theirs
+    for a file-level view of intent.
+  - With `merge.conflictstyle=zdiff3`, conflict markers include:
+    - `<<<<<<<` ours, `|||||||` base, `=======` split, `>>>>>>>` theirs.
+    - Matching lines near the start/end are trimmed out of the conflict region,
+      so focus on the differing core.
+  - Summarize the intent of both changes, decide the semantically correct
+    outcome, then edit:
+    - State what each side is trying to achieve (bug fix, refactor, rename,
+      behavior change).
+    - Identify the shared goal, if any, and whether one side supersedes the
+      other.
+    - Decide the final behavior first; only then craft the code to match that
+      decision.
+    - Prefer preserving invariants, API contracts, and user-visible behavior
+      unless the conflict clearly indicates a deliberate change.
+  - Open files and understand intent on both sides before choosing a resolution.
+- Prefer minimal, intention-preserving edits:
+  - Keep behavior consistent with the branch’s purpose.
+  - Avoid accidental deletions or silent behavior changes.
+- Resolve one file at a time and rerun tests after each logical batch.
+- Use `ours/theirs` only when you are certain one side should win entirely.
+- For complex conflicts, search for related files or definitions to align with
+  the rest of the codebase.
+- For generated files, resolve non-generated conflicts first, then regenerate:
+  - Prefer resolving source files and handwritten logic before touching
+    generated artifacts.
+  - Run the CLI/tooling command that produced the generated file to recreate it
+    cleanly, then stage the regenerated output.
+- For import conflicts where intent is unclear, accept both sides first:
+  - Keep all candidate imports temporarily, finish the merge, then run lint/type
+    checks to remove unused or incorrect imports safely.
+- After resolving, ensure no conflict markers remain:
+  - `git diff --check`
+- When unsure, note assumptions and ask for confirmation before finalizing the
+  merge.
 
-1. **验证 Git 状态** — 确保工作区干净，或在合并前提交/stash 变更
+## When To Ask The User (Keep To A Minimum)
 
-2. **启用 rerere** — 本地启用 `rerere.enabled` 和 `rerere.autoupdate`
+Do not ask for input unless there is no safe, reversible alternative. Prefer
+making a best-effort decision, documenting the rationale, and proceeding.
 
-3. **确认远程和分支** — 确保 `origin` 远程存在且当前分支正确
+Ask the user only when:
 
-4. **获取最新引用** — 使用 `git fetch origin`
+- The correct resolution depends on product intent or behavior not inferable
+  from code, tests, or nearby documentation.
+- The conflict crosses a user-visible contract, API surface, or migration where
+  choosing incorrectly could break external consumers.
+- A conflict requires selecting between two mutually exclusive designs with
+  equivalent technical merit and no clear local signal.
+- The merge introduces data loss, schema changes, or irreversible side effects
+  without an obvious safe default.
+- The branch is not the intended target, or the remote/branch names do not exist
+  and cannot be determined locally.
 
-5. **同步远程特性分支** — 使用 `git pull --ff-only` 拉取当前分支更新
-
-6. **按顺序合并** — 优先使用 `git -c merge.conflictstyle=zdiff3 merge origin/main` 以获得更好的冲突上下文
-
-7. **如出现冲突** — 解决冲突后 `git add` 文件并提交（或使用 `git merge --continue`）
-
-8. **通过项目检查验证** — 遵循仓库策略
-
-9. **总结合并** — 突出最具挑战性的冲突、解决方式、假设和后续事项
-
-## 冲突解决指南
-
-### 检查上下文再编辑
-- 使用 `git status`、`git diff`
-- 使用 zdiff3 风格的标记：`<<<<<<<`（ours）、`|||||||`（base）、`=======`（split）、`>>>>>>>`（theirs）
-
-### 总结双方意图
-- 识别每个变更的目标
-- 确定共同目标
-- 在编写代码前决定正确的最终行为
-
-### 最小化、保留意图的编辑
-- 避免意外删除或静默行为变更
-- 一次解决一个文件
-- 每个逻辑批次后运行测试
-
-### 生成文件
-- 先解决源码/手写冲突
-- 然后使用适当工具重新生成产物
-
-### 导入冲突
-- 意图不明确时临时接受双方
-- 完成合并后运行 lint/类型检查清理
-
-### 验证
-- 使用 `git diff --check` 确认无残留冲突标记
-- 不确定时记录假设并请求确认
-
-## 何时询问用户
-
-仅在以下情况询问：
-- 解决方案依赖于无法从代码/测试/文档推断的**产品意图**
-- 冲突涉及**用户可见的契约、API 接口或迁移**，错误选择可能破坏消费者
-- 两个**互斥设计**具有同等技术优势，无明确本地信号
-- 合并引入**数据丢失、模式变更或不可逆副作用**，无明显安全默认值
-- **分支或远程名称**不正确或不存在，无法本地确定
-
-否则继续合并，简要解释决定，留下清晰可审查的提交历史。
+Otherwise, proceed with the merge, explain the decision briefly in notes, and
+leave a clear, reviewable commit history.

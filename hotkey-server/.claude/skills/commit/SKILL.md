@@ -1,63 +1,75 @@
 ---
 name: commit
-description: 使用会话历史创建规范的 Git 提交
+description:
+  Create a well-formed git commit from current changes using session history for
+  rationale and summary; use when asked to commit, prepare a commit message, or
+  finalize staged work.
 ---
 
-# Commit Skill
+# Commit
 
-创建规范的 Git 提交，使用会话历史作为提交依据和摘要。
+## Goals
 
-## 目标
+- Produce a commit that reflects the actual code changes and the session
+  context.
+- Follow common git conventions (type prefix, short subject, wrapped body).
+- Include both summary and rationale in the body.
 
-- 生成反映实际代码变更和会话上下文的提交
-- 遵循标准 Git 约定（类型前缀、简洁主题、换行正文）
-- 将摘要和依据合并到提交正文中
+## Inputs
 
-## 输入
+- Claude session history for intent and rationale.
+- `git status`, `git diff`, and `git diff --staged` for actual changes.
+- Repo-specific commit conventions if documented.
 
-- **会话历史**：用于理解意图和依据
-- **Git 命令**：`git status`、`git diff`、`git diff --staged` 用于检查变更
-- **仓库特定约定**：如果存在的话
+## Steps
 
-## 步骤
+1. Read session history to identify scope, intent, and rationale.
+2. Inspect the working tree and staged changes (`git status`, `git diff`,
+   `git diff --staged`).
+3. Stage intended changes, including new files (`git add -A`) after confirming
+   scope.
+4. Sanity-check newly added files; if anything looks random or likely ignored
+   (build artifacts, logs, temp files), flag it to the user before committing.
+5. If staging is incomplete or includes unrelated files, fix the index or ask
+   for confirmation.
+6. Choose a conventional type and optional scope that match the change (e.g.,
+   `feat(scope): ...`, `fix(scope): ...`, `refactor(scope): ...`).
+7. Write a subject line in imperative mood, <= 72 characters, no trailing
+   period.
+8. Write a body that includes:
+   - Summary of key changes (what changed).
+   - Rationale and trade-offs (why it changed).
+   - Tests or validation run (or explicit note if not run).
+9. Append a `Co-authored-by` trailer for Claude using `Claude <claude@openai.com>`
+   unless the user explicitly requests a different identity.
+10. Wrap body lines at 72 characters.
+11. Create the commit message with a here-doc or temp file and use
+    `git commit -F <file>` so newlines are literal (avoid `-m` with `\n`).
+12. Commit only when the message matches the staged changes: if the staged diff
+    includes unrelated files or the message describes work that isn't staged,
+    fix the index or revise the message before committing.
 
-1. 解析会话历史，提取范围、意图和依据
-2. 通过 Git 命令检查工作区和暂存区变更
-3. 确认范围后暂存预期变更（`git add -A`）
-4. 健全性检查文件，标记随机或可能被忽略的文件（构建产物、日志、临时文件）
-5. 在继续之前修复不完整或不正确的暂存
-6. 选择约定类型和可选范围（如 `feat(scope): ...`、`fix(scope): ...`、`refactor(scope): ...`）
-7. 主题使用祈使语气，最多 72 个字符，无尾随句号
-8. 正文必须包含：关键变更摘要、依据/权衡、测试/验证状态
-9. 附加 `Co-authored-by` 尾行：`Co-authored-by: Claude <noreply@anthropic.com>`
-10. 正文行宽 72 个字符
-11. 使用 here-doc 或临时文件配合 `git commit -F <file>` 保留字面换行
-12. 只有当"消息与暂存变更匹配"时才提交
+## Output
 
-## 模板结构
+- A single commit created with `git commit` whose message reflects the session.
+
+## Template
+
+Type and scope are examples only; adjust to fit the repo and changes.
 
 ```
 <type>(<scope>): <short summary>
 
-摘要：
+Summary:
+- <what changed>
 - <what changed>
 
-依据：
+Rationale:
+- <why>
 - <why>
 
-测试：
+Tests:
 - <command or "not run (reason)">
 
-Co-authored-by: Claude <noreply@anthropic.com>
+Co-authored-by: Claude <claude@openai.com>
 ```
-
-## 提交类型
-
-- `feat`：新功能
-- `fix`：修复
-- `refactor`：重构
-- `test`：测试
-- `chore`：杂项
-- `docs`：文档
-- `style`：样式
-- `perf`：性能
