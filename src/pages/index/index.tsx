@@ -88,6 +88,7 @@ export default function IndexPage() {
   const [hotspots, setHotspots] = useState(initialHotspots);
   const [selectedHotspotId, setSelectedHotspotId] = useState(initialHotspots[0].id);
   const selected = useMemo(() => hotspots.find((item) => item.id === selectedHotspotId) ?? hotspots[0], [hotspots, selectedHotspotId]);
+  const isWebHost = Taro.getEnv() === Taro.ENV_TYPE.WEB;
   const notificationItems: HotKeyAPI.NotificationListResponse = {
     limit: 2,
     offset: 0,
@@ -108,14 +109,26 @@ export default function IndexPage() {
   };
 
   async function handlePlatformLogin() {
-    const loginResult = await Taro.login();
-    const payload: HotKeyAPI.MiniappLoginRequest = {
-      provider: "wechat",
-      openid: loginResult.code || "local-demo-openid",
-      display_name: "HotKey 创作者",
-    };
-    Taro.setStorageSync(HOTKEY_TOKEN, `demo-token-${payload.openid}`);
-    setIsLoggedIn(true);
+    try {
+      const openid = isWebHost ? "h5-demo-openid" : (await Taro.login()).code || "local-demo-openid";
+      const payload: HotKeyAPI.MiniappLoginRequest = {
+        provider: "wechat",
+        openid,
+        display_name: "HotKey 创作者",
+      };
+      Taro.setStorageSync(HOTKEY_TOKEN, `demo-token-${payload.openid}`);
+      setIsLoggedIn(true);
+      await Taro.showToast({
+        title: isWebHost ? "H5 演示登录成功" : "登录成功",
+        icon: "success",
+      });
+    } catch (error) {
+      console.error(error);
+      await Taro.showToast({
+        title: "登录失败，请稍后重试",
+        icon: "none",
+      });
+    }
   }
 
   function toggleFavorite(hotspotId: number) {
@@ -123,10 +136,26 @@ export default function IndexPage() {
   }
 
   async function handleSubscribeMessage() {
-    await Taro.requestSubscribeMessage({
-      entityIds: ["HOTKEY_TEMPLATE_ID"],
-      tmplIds: ["HOTKEY_TEMPLATE_ID"],
-    });
+    if (isWebHost) {
+      await Taro.showToast({
+        title: "H5 承载环境暂不支持订阅消息",
+        icon: "none",
+      });
+      return;
+    }
+
+    try {
+      await Taro.requestSubscribeMessage({
+        entityIds: ["HOTKEY_TEMPLATE_ID"],
+        tmplIds: ["HOTKEY_TEMPLATE_ID"],
+      });
+    } catch (error) {
+      console.error(error);
+      await Taro.showToast({
+        title: "订阅失败，请稍后重试",
+        icon: "none",
+      });
+    }
   }
 
   return (

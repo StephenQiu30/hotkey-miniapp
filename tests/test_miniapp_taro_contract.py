@@ -20,6 +20,7 @@ class MiniappTaroContractTests(unittest.TestCase):
             "@tarojs/taro",
             "@tarojs/components",
             "@tarojs/cli",
+            "@tarojs/plugin-platform-h5",
             "@tarojs/webpack5-runner",
             "react",
             "react-dom",
@@ -27,6 +28,7 @@ class MiniappTaroContractTests(unittest.TestCase):
             self.assertIn(package_name, dependencies)
 
         self.assertEqual(package_json["scripts"]["build:weapp"], "taro build --type weapp")
+        self.assertEqual(package_json["scripts"]["build:h5"], "taro build --type h5")
 
         for relative_path in [
             "config/index.ts",
@@ -34,6 +36,7 @@ class MiniappTaroContractTests(unittest.TestCase):
             "src/app.tsx",
             "src/app.config.ts",
             "src/app.scss",
+            "src/index.html",
             "src/pages/index/index.tsx",
             "src/pages/index/index.config.ts",
             "src/pages/index/index.scss",
@@ -46,12 +49,15 @@ class MiniappTaroContractTests(unittest.TestCase):
         for expected in [
             "Taro.login",
             "HotKeyAPI.MiniappLoginRequest",
+            "Taro.getEnv() === Taro.ENV_TYPE.WEB",
             "热点榜单",
             "快速理解",
             "收藏关注",
             "toggleFavorite",
             "selectedHotspotId",
             "内容选题",
+            "Taro.showToast",
+            "H5 承载环境暂不支持订阅消息",
         ]:
             self.assertIn(expected, index_page)
 

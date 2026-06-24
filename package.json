@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "build:h5": "taro build --type h5",
+    "dev:h5": "taro build --type h5 --watch",
     "build:weapp": "taro build --type weapp",
     "dev:weapp": "taro build --type weapp --watch",
     "openapi:generate": "openapi2ts",
@@ -12,8 +14,10 @@
   "devDependencies": {
     "@babel/preset-react": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.6.2",
     "@tarojs/cli": "^4.2.0",
     "@tarojs/plugin-framework-react": "^4.2.0",
+    "@tarojs/plugin-platform-h5": "^4.2.0",
     "@tarojs/plugin-platform-weapp": "^4.2.0",
     "@tarojs/webpack5-runner": "^4.2.0",
     "@types/node": "^25.9.1",
@@ -21,6 +25,7 @@
     "@types/react-dom": "^18.3.7",
     "@umijs/openapi": "^1.14.1",
     "babel-preset-taro": "^4.2.0",
+    "react-refresh": "^0.18.0",
     "tslib": "^2.8.1",
     "typescript": "^6.0.3"
   },

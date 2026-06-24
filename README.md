@@ -50,6 +50,9 @@ npm install
 # 从 server 的 openapi.json 生成 TypeScript 客户端
 npm run openapi:generate
 
+# 浏览器承载的 H5 调试入口（用于 agent-browser 回归）
+npm run dev:h5
+
 # 编译微信小程序并监听变更
 npm run dev:weapp
 ```
@@ -59,6 +62,7 @@ npm run dev:weapp
 ### 常用命令
 
 ```bash
+npm run build:h5       # 浏览器承载入口构建
 npm run build:weapp    # 生产构建
 npm run typecheck      # TypeScript 类型检查
 npm run test           # 仓库治理与契约测试
@@ -79,6 +83,8 @@ python3 -m unittest discover -s tests -p 'test_repository_governance.py'
 2. 更新本仓的 `openapi.json`
 3. 执行 `npm run openapi:generate`
 4. 在页面中接入新接口，用微信开发者工具回归
+
+如果需要使用 `vercel:agent-browser` 做端侧可视回归，优先启动 `npm run dev:h5` 提供浏览器承载入口。
 
 ## 目录结构
 
