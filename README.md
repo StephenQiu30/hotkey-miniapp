@@ -1,4 +1,4 @@
-# HotKey Miniapp
+# hotkey-miniapp
 
 HotKey 是面向内容创作者的热点监控与 AI 选题助手。`hotkey-miniapp` 是它的 **Taro 跨端小程序**，让你在手机微信上随时查看热点、快速理解事件、收藏关注话题，并在路上完成轻量选题判断。
 
@@ -62,6 +62,7 @@ npm run dev:weapp
 npm run build:weapp    # 生产构建
 npm run typecheck      # TypeScript 类型检查
 npm run test           # 仓库治理与契约测试
+python3 -m unittest discover -s tests -p 'test_repository_governance.py'
 ```
 
 ## OpenAPI 客户端生成

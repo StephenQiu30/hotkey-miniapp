@@ -62,6 +62,9 @@ class MiniappTaroContractTests(unittest.TestCase):
         self.assertIn("Taro.getStorageSync", request_adapter)
         self.assertIn("Authorization", request_adapter)
         self.assertIn("HOTKEY_TOKEN", request_adapter)
+        self.assertIn("class HotKeyAPIError extends Error", request_adapter)
+        self.assertIn("payload.code", request_adapter.replace("data.code", "payload.code"))
+        self.assertIn("isAPIErrorPayload", request_adapter)
 
 
 if __name__ == "__main__":

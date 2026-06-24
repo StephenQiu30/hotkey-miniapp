@@ -15,6 +15,8 @@
 
 ## Miniapp 契约与数据模型门禁
 
+本仓沿用 Server 契约与数据模型门禁，只是在小程序端补充平台差异要求。
+
 1. 小程序只读端只消费 `hotkey-server` 的 OpenAPI 生成客户端，不手写后端 API 类型。
 2. 小程序展示字段、只读状态、错误结构和数据流必须来自 Server PRD、SDD、数据库设计和 OpenAPI 契约。
 3. 如果小程序需要新增持久化字段或接口字段，必须先回到 Server 更新 `docs/design/001-v1数据库设计.md`、`db/schema.sql` 和 OpenAPI，再生成客户端。
@@ -72,9 +74,9 @@
 ## Commit 规范
 
 1. 提交类型只使用：`test:`、`docs:`、`impl:`、`feat:`、`chore:`、`refactor:`。
-2. 功能变更保持 test-first 顺序：`test:` -> `impl:`/`feat:` -> 可选 `refactor:`/`docs:`/`chore:`。
+2. 功能变更保持 test-first 提交顺序：`test:` -> `impl:`/`feat:` -> 可选 `refactor:`/`docs:`/`chore:`。
 3. `test:` 只放测试、fixture、mock、期望和测试辅助；不得混入生产实现。
-4. `impl:` 是让测试通过的最小实现；`feat:` 是用户可见能力，必须有测试或明确例外。
+4. `impl:` 是让测试通过的最小实现；可以理解为最小 `impl:` commit。`feat:` 是用户可见能力，必须有测试或明确例外。
 5. 分支名用 ASCII slug，例如 `feature/ste-123-short-topic`，中文只放 PR 标题、提交信息和 Workpad。
 6. 每个提交职责单一；提交前后检查工作区，避免混入无关修改、缓存、日志和一次性产物。
 
