@@ -66,7 +66,7 @@
 
 1. `CLAUDE.md` 写稳定行为准则；`WORKFLOW.md` 写 Linear project、workspace、hooks、agent command、并发和 label 路由。
 2. 执行 agent 使用 `agent:*` 标签；审核 agent 使用 `reviewer:*` 标签。
-3. `Agent Review` 阶段优先使用 `reviewer:*`，常用标签：`reviewer:claude`、`reviewer:gemini`、`reviewer:codex`、`reviewer:cursor`。
+3. `Agent Review` 阶段优先使用 `reviewer:*`，常用标签：`reviewer:claude`、`reviewer:antigravity`、`reviewer:codex`、`reviewer:cursor`。
 4. 默认 reviewer 为 `reviewer:claude`；不要使用旧式 `review:*` 标签。
 5. Review 发现问题时，把意见写入 Workpad 的 `Agent Review` 区域，移动到 `Rework`，并保留/恢复实现用的 `agent:*` 标签。
 6. Review 通过后才移动到 `Human Review`。

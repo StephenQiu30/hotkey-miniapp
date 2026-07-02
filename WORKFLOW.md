@@ -35,11 +35,11 @@ agent:
     agent:codex: codex
     agent:claude: claude
     agent:cursor: cursor
-    agent:gemini: gemini
+    agent:antigravity: antigravity
     reviewer:codex: codex
     reviewer:claude: claude
     reviewer:cursor: cursor
-    reviewer:gemini: gemini
+    reviewer:antigravity: antigravity
 codex:
   command: codex --config shell_environment_policy.inherit=all --config 'model="gpt-5.5"' --config model_reasoning_effort=xhigh app-server
   approval_policy: never
@@ -52,8 +52,8 @@ claude:
 cursor:
   command: cursor-agent -p --force --sandbox disabled --output-format stream-json --stream-partial-output --approve-mcps
   prompt_mode: argument
-gemini:
-  command: gemini
+antigravity:
+  command: antigravity
 ---
 
 You are working on a Linear ticket `{{ issue.identifier }}`
@@ -100,11 +100,11 @@ Symphony selects the agent runtime from Linear labels configured in `agent.runti
 - `agent:codex` -> Codex app-server
 - `agent:claude` -> Claude CLI
 - `agent:cursor` -> Cursor CLI
-- `agent:gemini` -> Gemini CLI
+- `agent:antigravity` -> Antigravity CLI
 - `reviewer:codex` -> Codex app-server during `Agent Review`
 - `reviewer:claude` -> Claude CLI during `Agent Review`
 - `reviewer:cursor` -> Cursor CLI during `Agent Review`
-- `reviewer:gemini` -> Gemini CLI during `Agent Review`
+- `reviewer:antigravity` -> Antigravity CLI during `Agent Review`
 
 When no matching label is present, Symphony uses `agent.default_runtime` (`claude` by default).
 When the issue is in `Agent Review`, `reviewer:*` labels take precedence over `agent:*` labels so the implementation agent and reviewing agent can differ.
