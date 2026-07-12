@@ -11,19 +11,17 @@ type RequestOptions = {
 };
 
 type APIErrorPayload = {
-  error?: string;
-  code?: string;
+  code?: number;
+  error_code?: string;
 };
 
 export class HotKeyAPIError extends Error {
-  code?: string;
-  status: number;
-
-  constructor(message: string, status: number, code?: string) {
-    super(message);
+  constructor(
+    public status: number,
+    public errorCode: string,
+  ) {
+    super(errorCode);
     this.name = "HotKeyAPIError";
-    this.status = status;
-    this.code = code;
   }
 }
 
@@ -64,14 +62,13 @@ function normalizeMethod(method?: string) {
 }
 
 function toAPIError(status: number, data: unknown): HotKeyAPIError {
-  const fallbackMessage = `HotKey API request failed: ${status}`;
   if (isAPIErrorPayload(data)) {
-    return new HotKeyAPIError(data.error || fallbackMessage, status, data.code);
+    return new HotKeyAPIError(status, data.error_code || "INTERNAL_ERROR");
   }
 
-  return new HotKeyAPIError(fallbackMessage, status);
+  return new HotKeyAPIError(status, "INTERNAL_ERROR");
 }
 
 function isAPIErrorPayload(data: unknown): data is APIErrorPayload {
-  return typeof data === "object" && data !== null && ("error" in data || "code" in data);
+  return typeof data === "object" && data !== null && ("error_code" in data || "code" in data);
 }
