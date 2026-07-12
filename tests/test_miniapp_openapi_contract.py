@@ -41,6 +41,12 @@ class MiniappOpenAPIContractTests(unittest.TestCase):
         ]:
             self.assertIn(expected, typings)
 
+    def test_request_adapter_uses_stable_error_code_without_message(self) -> None:
+        request = self.read_text("src/utils/request.ts")
+        self.assertIn("error_code?: string", request)
+        self.assertIn("errorCode: string", request)
+        self.assertNotIn("message?: string", request)
+
 
 if __name__ == "__main__":
     unittest.main()

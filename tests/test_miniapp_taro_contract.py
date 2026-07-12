@@ -69,7 +69,7 @@ class MiniappTaroContractTests(unittest.TestCase):
         self.assertIn("Authorization", request_adapter)
         self.assertIn("HOTKEY_TOKEN", request_adapter)
         self.assertIn("class HotKeyAPIError extends Error", request_adapter)
-        self.assertIn("payload.code", request_adapter.replace("data.code", "payload.code"))
+        self.assertIn("payload.error_code", request_adapter.replace("data.error_code", "payload.error_code"))
         self.assertIn("isAPIErrorPayload", request_adapter)
 
 
