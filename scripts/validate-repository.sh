@@ -39,15 +39,16 @@ done
 grep -q "tracker:" WORKFLOW.md
 grep -q "kind: linear" WORKFLOW.md
 grep -q "project_slug" WORKFLOW.md
-grep -q "## Claude Workpad" WORKFLOW.md
+grep -q "## Codex Workpad" WORKFLOW.md
 grep -q "command: claude" WORKFLOW.md
 grep -q "Human Review" WORKFLOW.md
 grep -q 'test:`、`docs:`、`impl:`、`feat:`、`chore:`、`refactor:`' CLAUDE.md
 grep -q "test-first 提交顺序" CLAUDE.md
 grep -q '`impl:` commit' CLAUDE.md
 grep -q "Server 契约与数据模型门禁" CLAUDE.md
-grep -q "harness-quality-gate" WORKFLOW.md
-grep -q "superpowers" WORKFLOW.md
+grep -q "### Execution Documents" WORKFLOW.md
+grep -q '\.codex/skills/land/SKILL.md' WORKFLOW.md
+grep -q "Functional Review" WORKFLOW.md
 
 test ! -d .agents
 test ! -f skills-lock.json
